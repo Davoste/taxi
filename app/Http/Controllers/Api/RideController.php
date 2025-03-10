@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\User;
 use App\Models\Booking;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -76,16 +78,34 @@ class RideController extends Controller
     public function getRideStatus($bookingId)
     {
         try {
-            $booking = Booking::where('id', $bookingId)->where('user_id', auth()->id())->firstOrFail();
-            return response()->json([
+            // Cast bookingId to integer and find the booking
+            $booking = Booking::findOrFail((int)$bookingId);
+
+            Log::info('Ride status fetched', [
                 'booking_id' => $booking->id,
                 'status' => $booking->status,
-                'driver_id' => $booking->driver_id ?? 'DRIVER123',
-                'estimated_arrival' => '5 minutes',
             ]);
+
+            return response()->json([
+                'status' => $booking->status,
+            ], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::warning('Ride status requested for non-existent booking', [
+                'booking_id' => $bookingId,
+            ]);
+            return response()->json([
+                'error' => 'Ride not found',
+                'message' => "No booking found with ID: $bookingId",
+            ], 404);
         } catch (\Exception $e) {
-            Log::error('Get ride status error: ' . $e->getMessage());
-            return response()->json(['error' => 'Server error', 'message' => $e->getMessage()], 500);
+            Log::error('Error fetching ride status: ' . $e->getMessage(), [
+                'booking_id' => $bookingId,
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json([
+                'error' => 'Server error',
+                'message' => 'An unexpected error occurred: ' . $e->getMessage(),
+            ], 500);
         }
     }
 }

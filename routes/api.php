@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\DriverController;
 //
 use App\Models\User;
 use App\Models\Booking;
+
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -418,7 +419,46 @@ Route::middleware('auth:sanctum')->group(function () {
     
 
     Route::post('/cancel-ride/{bookingId}', [RideController::class, 'cancelRide']);
-    Route::get('/ride-status/{bookingId}', [RideController::class, 'getRideStatus']);
+    Route::get('/ride-status/{bookingId}', function ($bookingId) {
+        try {
+            // Find the booking by ID
+            $booking = Booking::find($bookingId);
+
+            // If booking doesn’t exist, return a 404
+            if (!$booking) {
+                Log::warning('Ride status requested for non-existent booking', [
+                    'booking_id' => $bookingId,
+                ]);
+                return response()->json([
+                    'error' => 'Ride not found',
+                    'message' => "No booking found with ID: $bookingId",
+                ], 404);
+            }
+
+            // Log successful fetch
+            Log::info('Ride status fetched', [
+                'booking_id' => $booking->id,
+                'status' => $booking->status,
+            ]);
+
+            // Return the status in the expected format
+            return response()->json([
+                'status' => $booking->status,
+            ], 200);
+        } catch (\Exception $e) {
+            // Log the error with details
+            Log::error('Error fetching ride status: ' . $e->getMessage(), [
+                'booking_id' => $bookingId,
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            // Return a detailed server error response
+            return response()->json([
+                'error' => 'Server error',
+                'message' => 'An unexpected error occurred while fetching ride status: ' . $e->getMessage(),
+            ], 500);
+        }
+    });
 
     Route::get('/customer/profile', function (Request $request) {
         $user = $request->user();
