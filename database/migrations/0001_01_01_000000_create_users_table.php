@@ -14,14 +14,16 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('email')->unique();
+            $table->string('email', 191)->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('phone')->unique();
             $table->string('pin'); // Store as hashed
             $table->enum('role', ['customer', 'driver', 'admin'])->default('customer');
-            $table->string('county')->after('role');
-            $table->string('sub_county')->after('county');
+            // $table->string('county')->after('role');
+            // $table->string('sub_county')->after('county');
+            $table->string('county');
+            $table->string('sub_county');
             $table->rememberToken();
             $table->timestamps();
         });

@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\User;
-use App\Models\Ride;
+use App\Models\Booking;
 
 class DashboardController extends Controller
 {
@@ -12,9 +11,8 @@ class DashboardController extends Controller
     {
         $customers = User::where('role', 'customer')->count();
         $drivers = User::where('role', 'driver')->count();
-        $completed_rides = Ride::where('status', 'completed')->count();
+        $completedRides = Booking::where('status', 'completed')->count();
 
-        return view('dashboard', compact('customers', 'drivers', 'completed_rides'));
+        return view('dashboard', compact('customers', 'drivers', 'completedRides'));
     }
-}
-
+}   
